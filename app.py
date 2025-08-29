@@ -4,13 +4,12 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import json
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Configure CORS for your deployed frontend domain.
-# Replace 'https://your-app-name.onrender.com' with the URL of your deployed frontend.
-# The '*' allows all origins, which is fine for local testing but less secure for production.
-CORS(app, origins='*')
+# Configure CORS for your local development.
+CORS(app, origins=['http://127.0.0.1:5000', 'http://localhost:5000', 'http://127.0.0.1:5500', 'http://localhost:5500', 'http://127.0.0.1:5501', 'http://localhost:5501'])
 
 # Simple in-memory storage for development purposes. In a real app, use a database.
 users = {}
@@ -66,7 +65,7 @@ def add_workout():
         "activityType": activity_type,
         "duration": duration,
         "calories": calories,
-        "timestamp": workout_entry.get('timestamp', datetime.utcnow().isoformat() + 'Z')
+        "timestamp": datetime.utcnow().isoformat() + 'Z'
     }
     
     if username not in workouts:
