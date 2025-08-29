@@ -1,65 +1,55 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
+import json
 
-# Initialize Flask app
 app = Flask(__name__)
 
-# Enable CORS for all domains, which is needed for a simple setup where the
-# frontend is served from a different origin (e.g., a local file)
-CORS(app)
+# Configure CORS for your deployed frontend domain.
+# Replace 'https://your-app-name.onrender.com' with the URL of your deployed frontend.
+# The '*' allows all origins, which is fine for local testing but less secure for production.
+CORS(app, origins='*')
 
-# --- Simple In-Memory "Database" ---
-# NOTE: For a production application, you should use a real database
-# like PostgreSQL, MySQL, or MongoDB, and a proper authentication system.
-# This is for demonstration purposes only.
+# Simple in-memory storage for development purposes. In a real app, use a database.
 users = {}
 workouts = {}
 
 @app.route('/register', methods=['POST'])
-def register():
-    """
-    Endpoint for user registration.
-    Expects a JSON payload with 'username' and 'password'.
-    """
+def register_user():
+    """Register a new user."""
     data = request.json
     username = data.get('username')
     password = data.get('password')
 
     if not username or not password:
-        return jsonify({"success": False, "message": "Username and password are required."}), 400
+        return jsonify({"success": False, "message": "Username and password are required"}), 400
 
     if username in users:
-        return jsonify({"success": False, "message": "Username already exists."}), 409
+        return jsonify({"success": False, "message": "Username already exists"}), 409
 
-    # In a real app, you would hash the password before storing it
-    users[username] = {"password": password}
-    workouts[username] = []  # Initialize an empty workout list for the new user
-
-    return jsonify({"success": True, "message": "User registered successfully."}), 201
+    # Store a hashed password for security
+    hashed_password = generate_password_hash(password)
+    users[username] = {"password": hashed_password}
+    return jsonify({"success": True, "message": "User registered successfully"}), 201
 
 @app.route('/login', methods=['POST'])
-def login():
-    """
-    Endpoint for user login.
-    Expects a JSON payload with 'username' and 'password'.
-    """
+def login_user():
+    """Log in an existing user."""
     data = request.json
     username = data.get('username')
     password = data.get('password')
 
-    if username not in users or users[username]["password"] != password:
-        return jsonify({"success": False, "message": "Invalid username or password."}), 401
-
-    return jsonify({"success": True, "message": "Login successful."}), 200
+    user_data = users.get(username)
+    if user_data and check_password_hash(user_data['password'], password):
+        return jsonify({"success": True, "message": "Login successful"}), 200
+    else:
+        return jsonify({"success": False, "message": "Invalid username or password"}), 401
 
 @app.route('/add_workout', methods=['POST'])
 def add_workout():
-    """
-    Endpoint to add a new workout for a user.
-    Expects a JSON payload with 'username', 'activityType', 'duration', and 'calories'.
-    """
+    """Add a new workout for a user."""
     data = request.json
     username = data.get('username')
     activity_type = data.get('activityType')
@@ -67,67 +57,47 @@ def add_workout():
     calories = data.get('calories')
 
     if not all([username, activity_type, duration, calories]):
-        return jsonify({"success": False, "message": "Missing workout data."}), 400
+        return jsonify({"success": False, "message": "Missing workout data"}), 400
 
-    if username not in users:
-        return jsonify({"success": False, "message": "User not found."}), 404
-
-    # Create a unique ID for the workout
     workout_id = str(uuid.uuid4())
-    workout = {
+    workout_entry = {
         "id": workout_id,
+        "username": username,
         "activityType": activity_type,
         "duration": duration,
         "calories": calories,
-        "timestamp": datetime.datetime.now().isoformat()
+        "timestamp": workout_entry.get('timestamp', datetime.utcnow().isoformat() + 'Z')
     }
-
-    workouts[username].append(workout)
-
-    return jsonify({"success": True, "message": "Workout added successfully."}), 201
+    
+    if username not in workouts:
+        workouts[username] = []
+    workouts[username].append(workout_entry)
+    
+    return jsonify({"success": True, "message": "Workout added successfully", "id": workout_id}), 201
 
 @app.route('/get_workouts', methods=['GET'])
 def get_workouts():
-    """
-    Endpoint to retrieve all workouts for a specific user.
-    Expects a 'username' query parameter.
-    """
+    """Retrieve all workouts for a user."""
     username = request.args.get('username')
-
-    if not username:
-        return jsonify({"success": False, "message": "Username is required."}), 400
-
-    if username not in workouts:
-        return jsonify({"success": False, "message": "User not found."}), 404
-
     user_workouts = workouts.get(username, [])
-
     return jsonify({"success": True, "workouts": user_workouts}), 200
 
-@app.route('/delete_workout/<string:workout_id>', methods=['DELETE'])
+@app.route('/delete_workout/<workout_id>', methods=['DELETE'])
 def delete_workout(workout_id):
-    """
-    Endpoint to delete a workout for a user.
-    Expects 'workout_id' in the URL and 'username' in the JSON body.
-    """
-    data = request.json
-    username = data.get('username')
-
-    if not username:
-        return jsonify({"success": False, "message": "Username is required."}), 400
-
+    """Delete a specific workout."""
+    username = request.json.get('username')
     if username not in workouts:
-        return jsonify({"success": False, "message": "User not found."}), 404
+        return jsonify({"success": False, "message": "User not found"}), 404
 
-    # Find the workout to delete by its ID
     initial_count = len(workouts[username])
     workouts[username] = [w for w in workouts[username] if w['id'] != workout_id]
+    
+    if len(workouts[username]) < initial_count:
+        return jsonify({"success": True, "message": "Workout deleted successfully"}), 200
+    else:
+        return jsonify({"success": False, "message": "Workout not found"}), 404
 
-    if len(workouts[username]) == initial_count:
-        return jsonify({"success": False, "message": "Workout not found."}), 404
-
-    return jsonify({"success": True, "message": "Workout deleted successfully."}), 200
-
-# Run the Flask app
+# Use Gunicorn for production instead of Flask's built-in server.
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
