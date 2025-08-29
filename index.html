@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Fitness Tracker</title>
+    <title>Grow Fit</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -109,6 +110,47 @@
                         </button>
                     </form>
                 </div>
+                
+                <!-- Calorie Tracker -->
+                <div class="bg-gray-700 rounded-xl p-6 mb-8 shadow-inner">
+                    <h3 class="text-xl font-semibold text-gray-100 mb-4">Daily Calorie Intake</h3>
+                    <form id="calorie-form" class="space-y-4">
+                        <div>
+                            <label for="meal-name" class="block text-sm font-medium text-gray-300">Meal/Food</label>
+                            <input type="text" id="meal-name" required class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label for="calories-eaten" class="block text-sm font-medium text-gray-300">Calories</label>
+                            <input type="number" id="calories-eaten" required class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                            Log Calories
+                        </button>
+                    </form>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-200">Total Today: <span id="total-calories" class="text-cyan-400">0</span> kcal</h4>
+                        <ul id="calorie-log" class="mt-4 space-y-2"></ul>
+                    </div>
+                </div>
+
+                <!-- Body Metrics Tracker -->
+                <div class="bg-gray-700 rounded-xl p-6 mb-8 shadow-inner">
+                    <h3 class="text-xl font-semibold text-gray-100 mb-4">Body Metrics</h3>
+                    <form id="metrics-form" class="space-y-4">
+                        <div>
+                            <label for="weight" class="block text-sm font-medium text-gray-300">Weight (kg)</label>
+                            <input type="number" id="weight" step="0.1" required class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label for="body-fat" class="block text-sm font-medium text-gray-300">Body Fat (%)</label>
+                            <input type="number" id="body-fat" step="0.1" class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                            Log Metrics
+                        </button>
+                    </form>
+                    <ul id="metrics-log" class="mt-6 space-y-2"></ul>
+                </div>
 
                 <!-- Fitness Challenge Section -->
                 <div class="bg-gray-700 rounded-xl p-6 mb-8 shadow-inner">
@@ -145,22 +187,26 @@
                 <!-- Motivational Section -->
                 <div class="bg-gray-700 rounded-xl p-6 mb-8 shadow-inner">
                     <div class="flex flex-col md:flex-row items-center gap-6">
-                        <img src="https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg" alt="Motivational image" class="rounded-xl shadow-md w-32 h-32 md:w-40 md:h-40 object-cover">
-                        <p class="text-xl italic text-gray-300 text-center md:text-left">
-                            "The only bad workout is the one that didn't happen."
-                        </p>
+                        <img id="motivational-image" src="https://picsum.photos/300/300?random=1" alt="A random motivational image to inspire you" class="rounded-xl shadow-md w-32 h-32 md:w-40 md:h-40 object-cover">
+                        <p id="motivational-quote" class="text-xl italic text-gray-300 text-center md:text-left"></p>
                     </div>
                 </div>
                 
                 <!-- Workout History Tabs -->
                 <div class="bg-gray-700 rounded-xl p-6 shadow-inner">
                     <h3 class="text-xl font-semibold text-gray-100 mb-4">Workout History</h3>
-                    <div class="flex flex-wrap gap-2 mb-4">
+                    <div class="flex flex-wrap gap-2 mb-4 items-center">
                         <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-cyan-500 hover:bg-cyan-600 active" data-tab="all">All</button>
                         <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="running">Running</button>
-                        <button class="tab-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="cycling">Cycling</button>
+                        <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="cycling">Cycling</button>
                         <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="lifting">Weightlifting</button>
                         <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="swimming">Swimming</button>
+                        <select id="sort-picker" class="ml-auto text-sm block px-4 py-2 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                            <option value="date-desc">Date (Newest First)</option>
+                            <option value="date-asc">Date (Oldest First)</option>
+                            <option value="calories-desc">Calories (High to Low)</option>
+                            <option value="calories-asc">Calories (Low to High)</option>
+                        </select>
                     </div>
                     <div id="workout-tabs-content" class="space-y-4">
                         <p class="text-gray-400">Select a tab to view history.</p>
@@ -174,7 +220,7 @@
     <!-- JavaScript logic -->
     <script>
         // Set the API URL to point to your Flask backend
-        const API_URL = 'http://127.0.0.1:5000';
+        const API_URL = 'https://YOUR-BACKEND-URL.onrender.com'; // Replace with your deployed backend URL
 
         // Get view elements
         const landingView = document.getElementById('landing-view');
@@ -197,6 +243,9 @@
         const authMessage = document.getElementById('auth-message');
         const welcomeMessage = document.getElementById('welcome-message');
         const workoutTabsContent = document.getElementById('workout-tabs-content');
+        const motivationalQuote = document.getElementById('motivational-quote');
+        const motivationalImage = document.getElementById('motivational-image');
+        const sortPicker = document.getElementById('sort-picker');
         
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modal-title');
@@ -215,15 +264,32 @@
         const challengeCurrentDaySpan = document.getElementById('challenge-current-day');
         const challengeTotalDaysSpan = document.getElementById('challenge-total-days');
 
+        // New feature elements
+        const calorieForm = document.getElementById('calorie-form');
+        const calorieLog = document.getElementById('calorie-log');
+        const totalCaloriesSpan = document.getElementById('total-calories');
+        const metricsForm = document.getElementById('metrics-form');
+        const metricsLog = document.getElementById('metrics-log');
+
         let isSigningUp = false;
         let currentUser = null;
         let allWorkouts = [];
         let currentChallenge = JSON.parse(localStorage.getItem('currentChallenge')) || null;
+        let dailyCalories = JSON.parse(localStorage.getItem('dailyCalories')) || [];
+        let bodyMetrics = JSON.parse(localStorage.getItem('bodyMetrics')) || [];
+
         let challenges = {
             running_30_days: { name: '30-Day Running Challenge', days: 30, activity: 'running' },
             lifting_21_days: { name: '21-Day Weightlifting Challenge', days: 21, activity: 'lifting' },
             swimming_15_days: { name: '15-Day Swimming Challenge', days: 15, activity: 'swimming' }
         };
+        const quotes = [
+            "The only bad workout is the one that didn't happen.",
+            "Motivation is what gets you started. Habit is what keeps you going.",
+            "Sore today, strong tomorrow.",
+            "Your body can stand almost anything. It's your mind that you have to convince.",
+            "Don't wish for it. Work for it."
+        ];
 
         // Function to show a simple modal message
         function showModal(title, message) {
@@ -269,6 +335,25 @@
             });
         }
 
+        // Sort workouts based on the selected option
+        function sortWorkouts(workouts, sortType) {
+            return workouts.sort((a, b) => {
+                if (sortType === 'date-desc') {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                }
+                if (sortType === 'date-asc') {
+                    return new Date(a.timestamp) - new Date(b.timestamp);
+                }
+                if (sortType === 'calories-desc') {
+                    return b.calories - a.calories;
+                }
+                if (sortType === 'calories-asc') {
+                    return a.calories - b.calories;
+                }
+                return 0;
+            });
+        }
+
         // Handle user authentication (login/signup)
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -295,6 +380,8 @@
                         welcomeMessage.textContent = `Welcome, ${currentUser}!`;
                         fetchWorkouts();
                         renderChallengeState();
+                        renderCalorieLog();
+                        renderMetricsLog();
                     }, 1000);
                 }
             } catch (error) {
@@ -383,8 +470,23 @@
                 } else {
                     filteredWorkouts = allWorkouts.filter(w => w.activityType === tab);
                 }
-                renderWorkoutTabs(filteredWorkouts);
+                // Re-sort the filtered workouts before rendering
+                const sortedWorkouts = sortWorkouts(filteredWorkouts, sortPicker.value);
+                renderWorkoutTabs(sortedWorkouts);
             });
+        });
+        
+        // Handle sort dropdown change
+        sortPicker.addEventListener('change', (e) => {
+            const activeTab = document.querySelector('.tab-button.active').dataset.tab;
+            let filteredWorkouts = [];
+            if (activeTab === 'all') {
+                filteredWorkouts = allWorkouts;
+            } else {
+                filteredWorkouts = allWorkouts.filter(w => w.activityType === activeTab);
+            }
+            const sortedWorkouts = sortWorkouts(filteredWorkouts, e.target.value);
+            renderWorkoutTabs(sortedWorkouts);
         });
 
         // Fetch and display workouts
@@ -395,8 +497,10 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    allWorkouts = data.workouts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-                    renderWorkoutTabs(allWorkouts);
+                    allWorkouts = data.workouts;
+                    // Initial sort
+                    const sortedWorkouts = sortWorkouts(allWorkouts, sortPicker.value);
+                    renderWorkoutTabs(sortedWorkouts);
                 } else {
                     console.error('Failed to fetch workouts:', data.message);
                 }
@@ -482,6 +586,80 @@
             showModal('Challenge Ended', 'The current challenge has been ended.');
         });
         
+        // Handle calorie form submission
+        calorieForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const mealName = e.target['meal-name'].value;
+            const caloriesEaten = parseInt(e.target['calories-eaten'].value, 10);
+            
+            const newEntry = {
+                name: mealName,
+                calories: caloriesEaten,
+                timestamp: new Date().toISOString()
+            };
+
+            dailyCalories.push(newEntry);
+            localStorage.setItem('dailyCalories', JSON.stringify(dailyCalories));
+            e.target.reset();
+            renderCalorieLog();
+        });
+
+        // Render calorie log and update total
+        function renderCalorieLog() {
+            const today = new Date().toLocaleDateString();
+            const todayEntries = dailyCalories.filter(e => new Date(e.timestamp).toLocaleDateString() === today);
+            
+            calorieLog.innerHTML = '';
+            let total = 0;
+            todayEntries.forEach(entry => {
+                total += entry.calories;
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center text-gray-300';
+                li.innerHTML = `
+                    <span>${entry.name}</span>
+                    <span class="font-semibold">${entry.calories} kcal</span>
+                `;
+                calorieLog.appendChild(li);
+            });
+            totalCaloriesSpan.textContent = total;
+        }
+
+        // Handle metrics form submission
+        metricsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const weight = parseFloat(e.target.weight.value);
+            const bodyFat = e.target['body-fat'].value ? parseFloat(e.target['body-fat'].value) : null;
+
+            const newMetric = {
+                weight: weight,
+                bodyFat: bodyFat,
+                timestamp: new Date().toISOString()
+            };
+
+            bodyMetrics.push(newMetric);
+            localStorage.setItem('bodyMetrics', JSON.stringify(bodyMetrics));
+            e.target.reset();
+            renderMetricsLog();
+        });
+
+        // Render body metrics log
+        function renderMetricsLog() {
+            metricsLog.innerHTML = '';
+            const sortedMetrics = bodyMetrics.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            sortedMetrics.forEach(metric => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center text-gray-300';
+                const date = new Date(metric.timestamp).toLocaleDateString();
+                let metricText = `${date}: ${metric.weight} kg`;
+                if (metric.bodyFat !== null) {
+                    metricText += ` • ${metric.bodyFat}% Body Fat`;
+                }
+                li.textContent = metricText;
+                metricsLog.appendChild(li);
+            });
+        }
+        
         // Handle logout
         logoutBtn.addEventListener('click', () => {
             currentUser = null;
@@ -505,9 +683,16 @@
                 welcomeMessage.textContent = `Welcome, ${currentUser}!`;
                 fetchWorkouts();
                 renderChallengeState();
+                renderCalorieLog();
+                renderMetricsLog();
             } else {
                 showView('landing-view');
             }
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            motivationalQuote.textContent = randomQuote;
+
+            // Set a random image on page load
+            motivationalImage.src = `https://picsum.photos/300/300?random=${new Date().getTime()}`;
         };
 
     </script>
