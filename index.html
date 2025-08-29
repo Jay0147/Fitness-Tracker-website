@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Fitness Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-button.active {
+            @apply bg-cyan-600 text-white shadow-lg;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-4 md:p-8">
+
+    <!-- Modal for messages -->
+    <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 hidden items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
+            <h3 id="modal-title" class="text-2xl font-bold text-gray-100 mb-4"></h3>
+            <p id="modal-message" class="text-gray-300 mb-6"></p>
+            <button id="modal-close-btn" class="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-full transition-transform transform hover:scale-105">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <!-- Main container to manage different views -->
+    <div id="app-container" class="w-full max-w-4xl bg-gray-800 rounded-2xl shadow-xl overflow-hidden p-6 md:p-10">
+
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-cyan-400">Grow Fit</h1>
+            <p class="text-lg text-gray-400 mt-2">Track your progress, smash your goals.</p>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <div id="content-area">
+
+            <!-- Landing View -->
+            <div id="landing-view" class="text-center transition-all duration-500">
+                <p class="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto mb-8">
+                    Start your fitness journey today. Log your workouts, visualize your trends, and stay motivated.
+                </p>
+                <button id="get-started-btn" class="px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-full shadow-lg transition-transform transform hover:scale-105">
+                    Get Started
+                </button>
+            </div>
+
+            <!-- Auth View (Hidden by default) -->
+            <div id="auth-view" class="hidden transition-all duration-500">
+                <form id="auth-form" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-300">Username</label>
+                        <input type="text" id="username" name="username" required class="mt-1 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
+                        <input type="password" id="password" name="password" required class="mt-1 block w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <button type="submit" id="auth-submit-btn" class="w-1/2 mr-2 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                            Login
+                        </button>
+                        <button type="button" id="toggle-signup-btn" class="w-1/2 ml-2 py-3 bg-gray-600 hover:bg-gray-700 text-gray-200 font-bold rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+                <div id="auth-message" class="mt-4 text-center text-red-400"></div>
+            </div>
+
+            <!-- Dashboard View (Hidden by default) -->
+            <div id="dashboard-view" class="hidden transition-all duration-500">
+                <div class="flex flex-col md:flex-row items-center justify-between mb-6">
+                    <h2 id="welcome-message" class="text-2xl md:text-3xl font-bold text-gray-200 mb-4 md:mb-0"></h2>
+                    <button id="logout-btn" class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full shadow-md transition-colors">
+                        Logout
+                    </button>
+                </div>
+                
+                <!-- New Workout Form -->
+                <div class="bg-gray-700 rounded-xl p-6 mb-8 shadow-inner">
+                    <h3 class="text-xl font-semibold text-gray-100 mb-4">Log a New Workout</h3>
+                    <form id="workout-form" class="space-y-4">
+                        <div>
+                            <label for="activity-type" class="block text-sm font-medium text-gray-300">Activity Type</label>
+                            <select id="activity-type" required class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                                <option value="running">Running</option>
+                                <option value="cycling">Cycling</option>
+                                <option value="lifting">Weightlifting</option>
+                                <option value="swimming">Swimming</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="duration" class="block text-sm font-medium text-gray-300">Duration (in minutes)</label>
+                            <input type="number" id="duration" required class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        </div>
+                        <div>
+                            <label for="calories" class="block text-sm font-medium text-gray-300">Calories Burned (estimated)</label>
+                            <input type="number" id="calories" required class="mt-1 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold rounded-xl shadow-lg transition-transform transform hover:scale-105">
+                            Add Workout
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Fitness Challenge Section -->
+                <div class="bg-gray-700 rounded-xl p-6 mb-8 shadow-inner">
+                    <h3 class="text-xl font-semibold text-gray-100 mb-4">Your Fitness Challenge</h3>
+                    <div id="challenge-container" class="space-y-4">
+                        <div id="challenge-active-view" class="hidden">
+                            <p class="text-gray-300">Current Challenge: <span id="challenge-name" class="font-bold text-cyan-400"></span></p>
+                            <div class="w-full h-4 bg-gray-600 rounded-full overflow-hidden my-2">
+                                <div id="challenge-progress-bar" class="h-full bg-green-500 transition-all duration-500" style="width: 0%;"></div>
+                            </div>
+                            <p class="text-sm text-gray-400">Day <span id="challenge-current-day">0</span> of <span id="challenge-total-days">0</span></p>
+                            <button id="complete-day-btn" class="mt-4 px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-full transition-colors">
+                                Complete Today's Activity
+                            </button>
+                            <button id="end-challenge-btn" class="mt-4 px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full transition-colors">
+                                End Challenge
+                            </button>
+                        </div>
+                        <div id="challenge-select-view">
+                            <p class="text-gray-300">No active challenge. Select one below to get started!</p>
+                            <select id="challenge-picker" class="mt-4 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-cyan-500 focus:border-cyan-500">
+                                <option value="">-- Select a Challenge --</option>
+                                <option value="running_30_days">30-Day Running Challenge</option>
+                                <option value="lifting_21_days">21-Day Weightlifting Challenge</option>
+                                <option value="swimming_15_days">15-Day Swimming Challenge</option>
+                            </select>
+                            <button id="start-challenge-btn" class="mt-4 px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-full transition-colors hidden">
+                                Start Challenge
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motivational Section -->
+                <div class="bg-gray-700 rounded-xl p-6 mb-8 shadow-inner">
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <img src="https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg" alt="Motivational image" class="rounded-xl shadow-md w-32 h-32 md:w-40 md:h-40 object-cover">
+                        <p class="text-xl italic text-gray-300 text-center md:text-left">
+                            "The only bad workout is the one that didn't happen."
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Workout History Tabs -->
+                <div class="bg-gray-700 rounded-xl p-6 shadow-inner">
+                    <h3 class="text-xl font-semibold text-gray-100 mb-4">Workout History</h3>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-cyan-500 hover:bg-cyan-600 active" data-tab="all">All</button>
+                        <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="running">Running</button>
+                        <button class="tab-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="cycling">Cycling</button>
+                        <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="lifting">Weightlifting</button>
+                        <button class="tab-button px-4 py-2 rounded-full font-semibold transition-colors bg-gray-600 hover:bg-gray-700" data-tab="swimming">Swimming</button>
+                    </div>
+                    <div id="workout-tabs-content" class="space-y-4">
+                        <p class="text-gray-400">Select a tab to view history.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript logic -->
+    <script>
+        // Set the API URL to point to your Flask backend
+        const API_URL = 'http://127.0.0.1:5000';
+
+        // Get view elements
+        const landingView = document.getElementById('landing-view');
+        const authView = document.getElementById('auth-view');
+        const dashboardView = document.getElementById('dashboard-view');
+        
+        // Get button elements
+        const getStartedBtn = document.getElementById('get-started-btn');
+        const toggleSignupBtn = document.getElementById('toggle-signup-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const tabButtons = document.querySelectorAll('.tab-button');
+
+        // Get form elements
+        const authForm = document.getElementById('auth-form');
+        const workoutForm = document.getElementById('workout-form');
+        const usernameInput = document.getElementById('username');
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+
+        // Get other UI elements
+        const authMessage = document.getElementById('auth-message');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const workoutTabsContent = document.getElementById('workout-tabs-content');
+        
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        // Challenge-specific elements
+        const challengeActiveView = document.getElementById('challenge-active-view');
+        const challengeSelectView = document.getElementById('challenge-select-view');
+        const challengePicker = document.getElementById('challenge-picker');
+        const startChallengeBtn = document.getElementById('start-challenge-btn');
+        const endChallengeBtn = document.getElementById('end-challenge-btn');
+        const completeDayBtn = document.getElementById('complete-day-btn');
+        const challengeNameSpan = document.getElementById('challenge-name');
+        const challengeProgressBar = document.getElementById('challenge-progress-bar');
+        const challengeCurrentDaySpan = document.getElementById('challenge-current-day');
+        const challengeTotalDaysSpan = document.getElementById('challenge-total-days');
+
+        let isSigningUp = false;
+        let currentUser = null;
+        let allWorkouts = [];
+        let currentChallenge = JSON.parse(localStorage.getItem('currentChallenge')) || null;
+        let challenges = {
+            running_30_days: { name: '30-Day Running Challenge', days: 30, activity: 'running' },
+            lifting_21_days: { name: '21-Day Weightlifting Challenge', days: 21, activity: 'lifting' },
+            swimming_15_days: { name: '15-Day Swimming Challenge', days: 15, activity: 'swimming' }
+        };
+
+        // Function to show a simple modal message
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Function to switch between views
+        function showView(viewId) {
+            landingView.classList.add('hidden');
+            authView.classList.add('hidden');
+            dashboardView.classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // Render workout history in a tabbed view
+        function renderWorkoutTabs(workouts) {
+            workoutTabsContent.innerHTML = workouts.length > 0 ? '' : '<p class="text-gray-400">No workouts logged yet.</p>';
+            workouts.forEach(w => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-800 p-4 rounded-xl shadow-md flex justify-between items-center';
+                const date = new Date(w.timestamp).toLocaleDateString();
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center text-sm text-gray-400 mb-1">
+                            <span class="capitalize text-cyan-400 font-semibold">${w.activityType}</span>
+                            <span class="mx-2">•</span>
+                            <span>${date}</span>
+                        </div>
+                        <p class="text-gray-200">
+                            <span class="font-bold">${w.duration} min</span> • ${w.calories} kcal
+                        </p>
+                    </div>
+                    <button class="delete-workout-btn p-2 rounded-full bg-red-500 hover:bg-red-600 text-white transition-colors" data-id="${w.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.728-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 011 1v6a1 1 0 11-2 0V8a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                `;
+                workoutTabsContent.appendChild(card);
+            });
+        }
+
+        // Handle user authentication (login/signup)
+        authForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = e.target.username.value;
+            const password = e.target.password.value;
+            const endpoint = isSigningUp ? '/register' : '/login';
+
+            try {
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+                authMessage.textContent = data.message;
+                authMessage.className = data.success ? 'mt-4 text-center text-green-400' : 'mt-4 text-center text-red-400';
+
+                if (data.success) {
+                    currentUser = username;
+                    localStorage.setItem('currentUser', username);
+                    setTimeout(() => {
+                        showView('dashboard-view');
+                        welcomeMessage.textContent = `Welcome, ${currentUser}!`;
+                        fetchWorkouts();
+                        renderChallengeState();
+                    }, 1000);
+                }
+            } catch (error) {
+                authMessage.textContent = 'Network error. Please try again later.';
+                authMessage.className = 'mt-4 text-center text-red-400';
+                console.error('Error:', error);
+            }
+        });
+
+        // Toggle between login and signup forms
+        toggleSignupBtn.addEventListener('click', () => {
+            isSigningUp = !isSigningUp;
+            authSubmitBtn.textContent = isSigningUp ? 'Sign Up' : 'Login';
+            toggleSignupBtn.textContent = isSigningUp ? 'Already have an account?' : 'Create Account';
+            authMessage.textContent = '';
+        });
+
+        // Handle workout form submission
+        workoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const workout = {
+                username: currentUser,
+                activityType: e.target['activity-type'].value,
+                duration: parseInt(e.target.duration.value, 10),
+                calories: parseInt(e.target.calories.value, 10)
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/add_workout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(workout)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    e.target.reset();
+                    showModal('Success!', 'Workout logged successfully.');
+                    fetchWorkouts();
+                } else {
+                    showModal('Error', `Failed to add workout: ${data.message}`);
+                    console.error('Failed to add workout:', data.message);
+                }
+            } catch (error) {
+                showModal('Error', 'Network error. Could not add workout.');
+                console.error('Error adding workout:', error);
+            }
+        });
+        
+        // Handle workout deletion
+        workoutTabsContent.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-workout-btn')) {
+                const btn = e.target.closest('.delete-workout-btn');
+                const workoutId = btn.dataset.id;
+                try {
+                    const response = await fetch(`${API_URL}/delete_workout/${workoutId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: currentUser })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showModal('Success!', 'Workout deleted.');
+                        fetchWorkouts();
+                    } else {
+                        showModal('Error', `Failed to delete workout: ${data.message}`);
+                    }
+                } catch (error) {
+                    showModal('Error', 'Network error. Could not delete workout.');
+                    console.error('Error deleting workout:', error);
+                }
+            }
+        });
+
+        // Handle tab clicks
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                tabButtons.forEach(btn => btn.classList.remove('active', 'bg-cyan-500', 'hover:bg-cyan-600', 'text-white'));
+                tabButtons.forEach(btn => btn.classList.add('bg-gray-600', 'hover:bg-gray-700'));
+                e.target.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+                e.target.classList.add('active', 'bg-cyan-500', 'hover:bg-cyan-600', 'text-white');
+                const tab = e.target.dataset.tab;
+                
+                let filteredWorkouts = [];
+                if (tab === 'all') {
+                    filteredWorkouts = allWorkouts;
+                } else {
+                    filteredWorkouts = allWorkouts.filter(w => w.activityType === tab);
+                }
+                renderWorkoutTabs(filteredWorkouts);
+            });
+        });
+
+        // Fetch and display workouts
+        async function fetchWorkouts() {
+            if (!currentUser) return;
+            try {
+                const response = await fetch(`${API_URL}/get_workouts?username=${currentUser}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    allWorkouts = data.workouts.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    renderWorkoutTabs(allWorkouts);
+                } else {
+                    console.error('Failed to fetch workouts:', data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching workouts:', error);
+            }
+        }
+        
+        // Challenge functions
+        function renderChallengeState() {
+            if (currentChallenge) {
+                challengeSelectView.classList.add('hidden');
+                challengeActiveView.classList.remove('hidden');
+                challengeNameSpan.textContent = challenges[currentChallenge.type].name;
+                challengeTotalDaysSpan.textContent = challenges[currentChallenge.type].days;
+                challengeCurrentDaySpan.textContent = currentChallenge.completedDays;
+                const progress = (currentChallenge.completedDays / challenges[currentChallenge.type].days) * 100;
+                challengeProgressBar.style.width = `${progress}%`;
+            } else {
+                challengeSelectView.classList.remove('hidden');
+                challengeActiveView.classList.add('hidden');
+            }
+        }
+
+        challengePicker.addEventListener('change', () => {
+            startChallengeBtn.classList.toggle('hidden', !challengePicker.value);
+        });
+
+        startChallengeBtn.addEventListener('click', () => {
+            const challengeType = challengePicker.value;
+            if (challengeType) {
+                currentChallenge = {
+                    type: challengeType,
+                    completedDays: 0,
+                    lastCompletedDate: null
+                };
+                localStorage.setItem('currentChallenge', JSON.stringify(currentChallenge));
+                renderChallengeState();
+                showModal('Challenge Started!', `${challenges[challengeType].name} has begun. Good luck!`);
+            }
+        });
+
+        completeDayBtn.addEventListener('click', () => {
+            if (!currentChallenge) {
+                showModal('Error', 'No active challenge to complete.');
+                return;
+            }
+            const today = new Date().toDateString();
+            if (currentChallenge.lastCompletedDate === today) {
+                showModal('Already Completed', 'You have already completed your activity for today.');
+                return;
+            }
+
+            const challengeDetails = challenges[currentChallenge.type];
+            // Check if the user has logged at least one workout of the required type today
+            const hasCompletedWorkout = allWorkouts.some(w => {
+                const workoutDate = new Date(w.timestamp).toDateString();
+                return workoutDate === today && w.activityType === challengeDetails.activity;
+            });
+            
+            if (hasCompletedWorkout) {
+                currentChallenge.completedDays++;
+                currentChallenge.lastCompletedDate = today;
+                localStorage.setItem('currentChallenge', JSON.stringify(currentChallenge));
+                renderChallengeState();
+                showModal('Day Completed!', `You've completed day ${currentChallenge.completedDays} of the challenge.`);
+
+                if (currentChallenge.completedDays >= challengeDetails.days) {
+                    showModal('Challenge Complete!', `Congratulations! You have finished the ${challengeDetails.name}!`);
+                    currentChallenge = null;
+                    localStorage.removeItem('currentChallenge');
+                    renderChallengeState();
+                }
+            } else {
+                showModal('Workout Not Logged', `Please log a ${challengeDetails.activity} workout today to complete this day.`);
+            }
+        });
+
+        endChallengeBtn.addEventListener('click', () => {
+            currentChallenge = null;
+            localStorage.removeItem('currentChallenge');
+            renderChallengeState();
+            showModal('Challenge Ended', 'The current challenge has been ended.');
+        });
+        
+        // Handle logout
+        logoutBtn.addEventListener('click', () => {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showView('landing-view');
+        });
+        
+        // Modal close button event
+        modalCloseBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+        // Initialize the app on page load
+        window.onload = () => {
+            getStartedBtn.addEventListener('click', () => showView('auth-view'));
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                currentUser = storedUser;
+                showView('dashboard-view');
+                welcomeMessage.textContent = `Welcome, ${currentUser}!`;
+                fetchWorkouts();
+                renderChallengeState();
+            } else {
+                showView('landing-view');
+            }
+        };
+
+    </script>
+</body>
+</html>
